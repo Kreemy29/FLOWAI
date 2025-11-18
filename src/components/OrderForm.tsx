@@ -6,9 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Upload, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useOrders } from "@/contexts/OrdersContext";
 
 const OrderForm = () => {
   const { toast } = useToast();
+  const { addOrder } = useOrders();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -16,16 +18,58 @@ const OrderForm = () => {
     description: ""
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Order Received!",
-      description: "We'll contact you shortly to discuss your project.",
-    });
-    // Reset form
-    setFormData({ name: "", email: "", phone: "", description: "" });
-    setSelectedFile(null);
+    setIsSubmitting(true);
+
+    try {
+      // Convert file to base64 if present
+      let productImage: string | null = null;
+      let productImageName: string | null = null;
+
+      if (selectedFile) {
+        productImageName = selectedFile.name;
+        productImage = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(selectedFile);
+        });
+      }
+
+      // Add order to context
+      addOrder({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        description: formData.description,
+        productImage,
+        productImageName,
+      });
+
+      toast({
+        title: "Order Received!",
+        description: "We'll contact you shortly to discuss your project.",
+      });
+
+      // Reset form
+      setFormData({ name: "", email: "", phone: "", description: "" });
+      setSelectedFile(null);
+      
+      // Reset file input
+      const fileInput = document.getElementById("file") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit order. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -117,8 +161,18 @@ const OrderForm = () => {
                 />
               </div>
 
-              <Button type="submit" variant="hero" className="w-full" size="lg">
-                Submit Order <Send className="ml-2" size={20} />
+              <Button 
+                type="submit" 
+                variant="hero" 
+                className="w-full" 
+                size="lg"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Submitting..." : (
+                  <>
+                    Submit Order <Send className="ml-2" size={20} />
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>

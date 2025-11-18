@@ -1,19 +1,10 @@
 import { useState } from "react";
-import sample1 from "@/assets/sample-1.jpg";
-import sample2 from "@/assets/sample-2.jpg";
-import sample3 from "@/assets/sample-3.jpg";
-import sample4 from "@/assets/sample-4.jpg";
 import { Eye } from "lucide-react";
+import { useData } from "@/contexts/DataContext";
 
 const Portfolio = () => {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
-  const samples = [
-    { src: sample1, alt: "Luxury perfume product photography" },
-    { src: sample2, alt: "Modern sneakers with holographic effects" },
-    { src: sample3, alt: "Premium watch with light trails" },
-    { src: sample4, alt: "Cosmetics with flowing liquid effects" }
-  ];
+  const [selectedItem, setSelectedItem] = useState<{ src: string; type: "image" | "video" } | null>(null);
+  const { portfolio } = useData();
 
   return (
     <section id="portfolio" className="py-24 bg-background">
@@ -32,17 +23,25 @@ const Portfolio = () => {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {samples.map((sample, index) => (
+          {portfolio.map((item) => (
             <div 
-              key={index}
+              key={item.id}
               className="group relative aspect-square rounded-lg overflow-hidden cursor-pointer"
-              onClick={() => setSelectedImage(sample.src)}
+              onClick={() => setSelectedItem({ src: item.src, type: item.type })}
             >
-              <img 
-                src={sample.src} 
-                alt={sample.alt}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
+              {item.type === "image" ? (
+                <img 
+                  src={item.src} 
+                  alt={item.alt}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+              ) : (
+                <video 
+                  src={item.src}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  muted
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-90 transition-opacity duration-300 flex items-center justify-center">
                 <Eye size={32} className="text-primary-foreground" />
               </div>
@@ -52,16 +51,25 @@ const Portfolio = () => {
       </div>
 
       {/* Lightbox */}
-      {selectedImage && (
+      {selectedItem && (
         <div 
           className="fixed inset-0 z-50 bg-background/95 backdrop-blur-lg flex items-center justify-center p-4 animate-fade-in"
-          onClick={() => setSelectedImage(null)}
+          onClick={() => setSelectedItem(null)}
         >
-          <img 
-            src={selectedImage} 
-            alt="Portfolio sample" 
-            className="max-w-full max-h-full rounded-lg shadow-glow"
-          />
+          {selectedItem.type === "image" ? (
+            <img 
+              src={selectedItem.src} 
+              alt="Portfolio item" 
+              className="max-w-full max-h-full rounded-lg shadow-glow"
+            />
+          ) : (
+            <video 
+              src={selectedItem.src}
+              className="max-w-full max-h-full rounded-lg shadow-glow"
+              controls
+              autoPlay
+            />
+          )}
         </div>
       )}
     </section>

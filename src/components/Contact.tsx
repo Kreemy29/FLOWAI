@@ -1,28 +1,37 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Phone, Mail, Instagram, Facebook, Linkedin, Calendar } from "lucide-react";
+import { useData } from "@/contexts/DataContext";
 
 const Contact = () => {
+  const { contactInfo, socials: socialsData, calendlyLink } = useData();
+
   const contactMethods = [
     {
       icon: Phone,
       title: "Call Us",
-      value: "+216 XX XXX XXX",
-      action: "tel:+216XXXXXXXX"
+      value: contactInfo.phone,
+      action: contactInfo.phoneAction
     },
     {
       icon: Mail,
       title: "Email Us",
-      value: "hello@flowai.tn",
-      action: "mailto:hello@flowai.tn"
+      value: contactInfo.email,
+      action: contactInfo.emailAction
     }
   ];
 
-  const socials = [
-    { icon: Instagram, name: "Instagram", url: "#" },
-    { icon: Facebook, name: "Facebook", url: "#" },
-    { icon: Linkedin, name: "LinkedIn", url: "#" }
-  ];
+  const socialIcons: Record<string, typeof Instagram> = {
+    Instagram,
+    Facebook,
+    Linkedin,
+  };
+
+  const socials = socialsData.map((social) => ({
+    icon: socialIcons[social.name] || Instagram,
+    name: social.name,
+    url: social.url,
+  }));
 
   return (
     <section id="contact" className="py-24 bg-background">
@@ -77,7 +86,7 @@ const Contact = () => {
           </Card>
 
           <div className="mt-8 text-center">
-            <Button variant="hero" size="lg" onClick={() => window.open('https://calendly.com', '_blank')}>
+            <Button variant="hero" size="lg" onClick={() => window.open(calendlyLink, '_blank')}>
               <Calendar className="mr-2" size={20} />
               Book a Call
             </Button>

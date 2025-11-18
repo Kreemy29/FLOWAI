@@ -1,13 +1,33 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navigation = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, logout, isAdmin } = useAuth();
+  const navigate = useNavigate();
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     element?.scrollIntoView({ behavior: 'smooth' });
+    setMobileMenuOpen(false);
+  };
+
+  const handleLoginClick = () => {
+    navigate("/login");
+    setMobileMenuOpen(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+    setMobileMenuOpen(false);
+  };
+
+  const handleAdminClick = () => {
+    navigate("/admin");
     setMobileMenuOpen(false);
   };
 
@@ -33,7 +53,28 @@ const Navigation = () => {
             <button onClick={() => scrollToSection('contact')} className="text-foreground hover:text-primary transition-colors">
               Contact
             </button>
-            <Button variant="outline" size="sm">Login</Button>
+            {user ? (
+              <>
+                {isAdmin && (
+                  <Button variant="outline" size="sm" onClick={handleAdminClick}>
+                    Admin
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  <LogOut className="mr-2" size={16} />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/signup")}>
+                  Sign Up
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleLoginClick}>
+                  Login
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -60,7 +101,28 @@ const Navigation = () => {
             <button onClick={() => scrollToSection('contact')} className="block w-full text-left text-foreground hover:text-primary transition-colors py-2">
               Contact
             </button>
-            <Button variant="outline" size="sm" className="w-full">Login</Button>
+            {user ? (
+              <>
+                {isAdmin && (
+                  <Button variant="outline" size="sm" className="w-full" onClick={handleAdminClick}>
+                    Admin
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" className="w-full" onClick={handleLogout}>
+                  <LogOut className="mr-2" size={16} />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" className="w-full" onClick={() => { navigate("/signup"); setMobileMenuOpen(false); }}>
+                  Sign Up
+                </Button>
+                <Button variant="outline" size="sm" className="w-full" onClick={handleLoginClick}>
+                  Login
+                </Button>
+              </>
+            )}
           </div>
         )}
       </div>

@@ -1,4 +1,8 @@
+import { useData } from "@/contexts/DataContext";
+
 const Footer = () => {
+  const { footerLinks } = useData();
+
   return (
     <footer className="bg-card border-t border-border py-8">
       <div className="container mx-auto px-4">
@@ -10,8 +14,8 @@ const Footer = () => {
             © 2024 FLOW AI. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-primary transition-colors">Terms of Service</a>
+            <a href={footerLinks.privacyPolicy} className="hover:text-primary transition-colors">Privacy Policy</a>
+            <a href={footerLinks.termsOfService} className="hover:text-primary transition-colors">Terms of Service</a>
           </div>
         </div>
       </div>
