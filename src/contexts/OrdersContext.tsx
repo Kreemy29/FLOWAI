@@ -40,23 +40,29 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       createdAt: new Date().toISOString(),
     };
 
-    const updatedOrders = [newOrder, ...orders];
-    setOrders(updatedOrders);
-    localStorage.setItem("orders", JSON.stringify(updatedOrders));
+    setOrders((prevOrders) => {
+      const updatedOrders = [newOrder, ...prevOrders];
+      localStorage.setItem("orders", JSON.stringify(updatedOrders));
+      return updatedOrders;
+    });
   };
 
   const updateOrderStatus = (id: string, status: Order["status"]) => {
-    const updatedOrders = orders.map((order) =>
-      order.id === id ? { ...order, status } : order
-    );
-    setOrders(updatedOrders);
-    localStorage.setItem("orders", JSON.stringify(updatedOrders));
+    setOrders((prevOrders) => {
+      const updatedOrders = prevOrders.map((order) =>
+        order.id === id ? { ...order, status } : order
+      );
+      localStorage.setItem("orders", JSON.stringify(updatedOrders));
+      return updatedOrders;
+    });
   };
 
   const deleteOrder = (id: string) => {
-    const updatedOrders = orders.filter((order) => order.id !== id);
-    setOrders(updatedOrders);
-    localStorage.setItem("orders", JSON.stringify(updatedOrders));
+    setOrders((prevOrders) => {
+      const updatedOrders = prevOrders.filter((order) => order.id !== id);
+      localStorage.setItem("orders", JSON.stringify(updatedOrders));
+      return updatedOrders;
+    });
   };
 
   return (
