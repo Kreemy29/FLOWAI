@@ -4,6 +4,11 @@ services:
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
+    # Redirect all routes to index.html for client-side routing (SPA)
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     headers:
       - path: /*
         name: X-Frame-Options

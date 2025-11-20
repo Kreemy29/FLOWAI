@@ -11,11 +11,24 @@ if (supabaseUrl && supabaseAnonKey && supabaseUrl !== '' && supabaseAnonKey !== 
   try {
     supabase = createClient(supabaseUrl, supabaseAnonKey);
     console.log('✅ Supabase initialized successfully');
+    console.log('🔗 Supabase URL:', supabaseUrl);
+    console.log('🔑 Supabase Key:', supabaseAnonKey.substring(0, 20) + '...');
+    
+    // Test connection immediately
+    supabase.from('site_data').select('count').then(({ error }) => {
+      if (error) {
+        console.error('⚠️ Supabase connection test failed:', error);
+      } else {
+        console.log('✅ Supabase connection test passed');
+      }
+    });
   } catch (error) {
     console.error("❌ Supabase initialization error:", error);
   }
 } else {
   console.warn('⚠️ Supabase not configured - missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY');
+  console.warn('URL:', supabaseUrl || 'NOT SET');
+  console.warn('Key:', supabaseAnonKey ? 'SET' : 'NOT SET');
 }
 
 // Check if Supabase is available
@@ -72,17 +85,24 @@ export const getSiteData = async () => {
 export const saveSiteData = async (data: any) => {
   if (!supabase) {
     console.error("❌ Cannot save: Supabase client not initialized");
+    console.error("Supabase URL:", import.meta.env.VITE_SUPABASE_URL || 'NOT SET');
+    console.error("Supabase Key:", import.meta.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
     return false;
   }
 
   try {
-    console.log('💾 Attempting to save data to Supabase...', data);
+    console.log('💾 Attempting to save data to Supabase...');
+    console.log('📦 Data being saved:', JSON.stringify(data, null, 2));
+    console.log('🔗 Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+    
     const { data: result, error } = await supabase
       .from('site_data')
       .upsert({
         id: 'main',
         data: data,
         updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'id'
       });
 
     if (error) {
@@ -96,10 +116,26 @@ export const saveSiteData = async (data: any) => {
       return false;
     }
 
-    console.log('✅ Data saved successfully to Supabase!', result);
+    console.log('✅ Data saved successfully to Supabase!');
+    console.log('📊 Result:', result);
+    
+    // Verify the save by reading it back
+    const { data: verifyData, error: verifyError } = await supabase
+      .from('site_data')
+      .select('*')
+      .eq('id', 'main')
+      .single();
+    
+    if (verifyError) {
+      console.warn('⚠️ Could not verify save:', verifyError);
+    } else {
+      console.log('✅ Verified: Data in Supabase:', verifyData);
+    }
+    
     return true;
   } catch (error: any) {
     console.error("❌ Exception saving site data:", error);
+    console.error("Exception stack:", error.stack);
     return false;
   }
 };

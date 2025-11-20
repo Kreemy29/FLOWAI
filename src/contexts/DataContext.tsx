@@ -36,12 +36,12 @@ interface DataContextType {
   portfolio: PortfolioItem[];
   footerLinks: FooterLinks;
   calendlyLink: string;
-  updateContactInfo: (info: ContactInfo) => void;
-  updateSocials: (socials: SocialLink[]) => void;
-  addPortfolioItem: (item: PortfolioItem) => void;
-  removePortfolioItem: (id: string) => void;
-  updateFooterLinks: (links: FooterLinks) => void;
-  updateCalendlyLink: (link: string) => void;
+  updateContactInfo: (info: ContactInfo) => Promise<boolean>;
+  updateSocials: (socials: SocialLink[]) => Promise<boolean>;
+  addPortfolioItem: (item: PortfolioItem) => Promise<boolean>;
+  removePortfolioItem: (id: string) => Promise<boolean>;
+  updateFooterLinks: (links: FooterLinks) => Promise<boolean>;
+  updateCalendlyLink: (link: string) => Promise<boolean>;
 }
 
 const defaultContactInfo: ContactInfo = {
@@ -164,13 +164,15 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     loadData();
   }, []);
 
-  const updateContactInfo = async (info: ContactInfo) => {
+  const updateContactInfo = async (info: ContactInfo): Promise<boolean> => {
+    console.log('🔄 updateContactInfo called with:', info);
     setContactInfo(info);
     localStorage.setItem("contactInfo", JSON.stringify(info));
     
     // Save to Supabase for shared access
     if (isSupabaseAvailable()) {
       try {
+        console.log('✅ Supabase is available, proceeding to save contact info...');
         // Get current Supabase data first (this is the source of truth)
         const supabaseData = await getSiteData() || {};
         // Merge with current local state and new info
@@ -186,24 +188,35 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const success = await saveSiteData(allData);
         if (!success) {
           console.error("❌ Failed to save contact info to Supabase");
+          return false;
         } else {
-          console.log("✅ Contact info saved to Supabase:", allData);
+          console.log("✅ Contact info saved to Supabase successfully!");
+          return true;
         }
       } catch (error) {
         console.error("❌ Error saving contact info to Supabase:", error);
+        return false;
       }
+    } else {
+      console.warn("⚠️ Supabase not available - contact info saved to localStorage only");
+      return false;
     }
   };
 
-  const updateSocials = async (newSocials: SocialLink[]) => {
+  const updateSocials = async (newSocials: SocialLink[]): Promise<boolean> => {
+    console.log('🔄 updateSocials called with:', newSocials);
     setSocials(newSocials);
     localStorage.setItem("socials", JSON.stringify(newSocials));
     
     // Save to Supabase for shared access
     if (isSupabaseAvailable()) {
+      console.log('✅ Supabase is available, proceeding to save socials...');
       try {
         // Get current Supabase data first (this is the source of truth)
+        console.log('📡 Fetching current Supabase data...');
         const supabaseData = await getSiteData() || {};
+        console.log('📦 Current Supabase data:', supabaseData);
+        
         // Merge with current local state and new socials
         const allData = {
           ...supabaseData, // Start with Supabase data (most up-to-date)
@@ -214,77 +227,111 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           footerLinks: supabaseData.footerLinks || footerLinks,
           calendlyLink: supabaseData.calendlyLink || calendlyLink,
         };
+        console.log('💾 Merged data to save:', allData);
+        
         const success = await saveSiteData(allData);
         if (!success) {
           console.error("❌ Failed to save socials to Supabase");
+          return false;
         } else {
-          console.log("✅ Socials saved to Supabase:", allData);
+          console.log("✅ Socials saved to Supabase successfully!");
+          return true;
         }
       } catch (error) {
         console.error("❌ Error saving socials to Supabase:", error);
+        return false;
       }
+    } else {
+      console.warn("⚠️ Supabase not available - socials saved to localStorage only");
+      return false;
     }
   };
 
-  const addPortfolioItem = async (item: PortfolioItem) => {
+  const addPortfolioItem = async (item: PortfolioItem): Promise<boolean> => {
+    console.log('🔄 addPortfolioItem called with:', item);
     const newPortfolio = [...portfolio, item];
     setPortfolio(newPortfolio);
     localStorage.setItem("portfolio", JSON.stringify(newPortfolio));
     
     // Save to Supabase for shared access
     if (isSupabaseAvailable()) {
-      // Get current Supabase data and merge with current state
-      const supabaseData = await getSiteData() || {};
-      const allData = {
-        ...supabaseData,
-        contactInfo: contactInfo,
-        socials: socials,
-        portfolio: newPortfolio,
-        footerLinks: footerLinks,
-        calendlyLink: calendlyLink,
-      };
-      const success = await saveSiteData(allData);
-      if (!success) {
-        console.error("Failed to save portfolio to Supabase");
-      } else {
-        console.log("✅ Portfolio saved to Supabase");
+      try {
+        console.log('✅ Supabase is available, proceeding to save portfolio...');
+        // Get current Supabase data and merge with current state
+        const supabaseData = await getSiteData() || {};
+        const allData = {
+          ...supabaseData,
+          contactInfo: supabaseData.contactInfo || contactInfo,
+          socials: supabaseData.socials || socials,
+          portfolio: newPortfolio,
+          footerLinks: supabaseData.footerLinks || footerLinks,
+          calendlyLink: supabaseData.calendlyLink || calendlyLink,
+        };
+        const success = await saveSiteData(allData);
+        if (!success) {
+          console.error("❌ Failed to save portfolio to Supabase");
+          return false;
+        } else {
+          console.log("✅ Portfolio saved to Supabase successfully!");
+          return true;
+        }
+      } catch (error) {
+        console.error("❌ Error saving portfolio to Supabase:", error);
+        return false;
       }
+    } else {
+      console.warn("⚠️ Supabase not available - portfolio saved to localStorage only");
+      return false;
     }
   };
 
-  const removePortfolioItem = async (id: string) => {
+  const removePortfolioItem = async (id: string): Promise<boolean> => {
+    console.log('🔄 removePortfolioItem called with id:', id);
     const newPortfolio = portfolio.filter((item) => item.id !== id);
     setPortfolio(newPortfolio);
     localStorage.setItem("portfolio", JSON.stringify(newPortfolio));
     
     // Save to Supabase for shared access
     if (isSupabaseAvailable()) {
-      // Get current Supabase data and merge with current state
-      const supabaseData = await getSiteData() || {};
-      const allData = {
-        ...supabaseData,
-        contactInfo: contactInfo,
-        socials: socials,
-        portfolio: newPortfolio,
-        footerLinks: footerLinks,
-        calendlyLink: calendlyLink,
-      };
-      const success = await saveSiteData(allData);
-      if (!success) {
-        console.error("Failed to save portfolio to Supabase");
-      } else {
-        console.log("✅ Portfolio saved to Supabase");
+      try {
+        console.log('✅ Supabase is available, proceeding to save portfolio...');
+        // Get current Supabase data and merge with current state
+        const supabaseData = await getSiteData() || {};
+        const allData = {
+          ...supabaseData,
+          contactInfo: supabaseData.contactInfo || contactInfo,
+          socials: supabaseData.socials || socials,
+          portfolio: newPortfolio,
+          footerLinks: supabaseData.footerLinks || footerLinks,
+          calendlyLink: supabaseData.calendlyLink || calendlyLink,
+        };
+        const success = await saveSiteData(allData);
+        if (!success) {
+          console.error("❌ Failed to save portfolio to Supabase");
+          return false;
+        } else {
+          console.log("✅ Portfolio saved to Supabase successfully!");
+          return true;
+        }
+      } catch (error) {
+        console.error("❌ Error saving portfolio to Supabase:", error);
+        return false;
       }
+    } else {
+      console.warn("⚠️ Supabase not available - portfolio saved to localStorage only");
+      return false;
     }
   };
 
-  const updateFooterLinks = async (links: FooterLinks) => {
+  const updateFooterLinks = async (links: FooterLinks): Promise<boolean> => {
+    console.log('🔄 updateFooterLinks called with:', links);
     setFooterLinks(links);
     localStorage.setItem("footerLinks", JSON.stringify(links));
     
     // Save to Supabase for shared access
     if (isSupabaseAvailable()) {
       try {
+        console.log('✅ Supabase is available, proceeding to save footer links...');
         // Get current Supabase data first (this is the source of truth)
         const supabaseData = await getSiteData() || {};
         // Merge with current local state and new footer links
@@ -300,22 +347,30 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const success = await saveSiteData(allData);
         if (!success) {
           console.error("❌ Failed to save footer links to Supabase");
+          return false;
         } else {
-          console.log("✅ Footer links saved to Supabase:", allData);
+          console.log("✅ Footer links saved to Supabase successfully!");
+          return true;
         }
       } catch (error) {
         console.error("❌ Error saving footer links to Supabase:", error);
+        return false;
       }
+    } else {
+      console.warn("⚠️ Supabase not available - footer links saved to localStorage only");
+      return false;
     }
   };
 
-  const updateCalendlyLink = async (link: string) => {
+  const updateCalendlyLink = async (link: string): Promise<boolean> => {
+    console.log('🔄 updateCalendlyLink called with:', link);
     setCalendlyLink(link);
     localStorage.setItem("calendlyLink", link);
     
     // Save to Supabase for shared access
     if (isSupabaseAvailable()) {
       try {
+        console.log('✅ Supabase is available, proceeding to save calendly link...');
         // Get current Supabase data first (this is the source of truth)
         const supabaseData = await getSiteData() || {};
         // Merge with current local state and new calendly link
@@ -331,12 +386,18 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const success = await saveSiteData(allData);
         if (!success) {
           console.error("❌ Failed to save calendly link to Supabase");
+          return false;
         } else {
-          console.log("✅ Calendly link saved to Supabase:", allData);
+          console.log("✅ Calendly link saved to Supabase successfully!");
+          return true;
         }
       } catch (error) {
         console.error("❌ Error saving calendly link to Supabase:", error);
+        return false;
       }
+    } else {
+      console.warn("⚠️ Supabase not available - calendly link saved to localStorage only");
+      return false;
     }
   };
 
