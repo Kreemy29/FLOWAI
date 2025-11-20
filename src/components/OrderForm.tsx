@@ -20,8 +20,12 @@ const OrderForm = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    if (isSubmitting) return;
+    
     setIsSubmitting(true);
 
     try {
@@ -33,18 +37,24 @@ const OrderForm = () => {
         productImageName = selectedFile.name;
         productImage = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
+          reader.onloadend = () => {
+            if (reader.result && typeof reader.result === 'string') {
+              resolve(reader.result);
+            } else {
+              reject(new Error('Failed to read file'));
+            }
+          };
+          reader.onerror = () => reject(new Error('File reading error'));
           reader.readAsDataURL(selectedFile);
         });
       }
 
       // Add order to context
       addOrder({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        description: formData.description,
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        description: formData.description.trim(),
         productImage,
         productImageName,
       });
@@ -62,9 +72,10 @@ const OrderForm = () => {
       const fileInput = document.getElementById("file") as HTMLInputElement;
       if (fileInput) fileInput.value = "";
     } catch (error) {
+      console.error("Order submission error:", error);
       toast({
         title: "Error",
-        description: "Failed to submit order. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to submit order. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -94,7 +105,7 @@ const OrderForm = () => {
             <CardDescription>Fill in the information below to get started</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
                 <Input 

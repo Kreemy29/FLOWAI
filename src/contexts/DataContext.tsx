@@ -3,6 +3,7 @@ import sample1 from "@/assets/sample-1.jpg";
 import sample2 from "@/assets/sample-2.jpg";
 import sample3 from "@/assets/sample-3.jpg";
 import sample4 from "@/assets/sample-4.jpg";
+import { getSiteData, saveSiteData, isSupabaseAvailable } from "@/services/supabase";
 
 export interface ContactInfo {
   phone: string;
@@ -78,50 +79,107 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [calendlyLink, setCalendlyLink] = useState<string>("https://calendly.com");
 
   useEffect(() => {
-    // Load data from localStorage
-    const storedContact = localStorage.getItem("contactInfo");
-    const storedSocials = localStorage.getItem("socials");
-    const storedPortfolio = localStorage.getItem("portfolio");
-    const storedFooterLinks = localStorage.getItem("footerLinks");
-    const storedCalendly = localStorage.getItem("calendlyLink");
+    const loadData = async () => {
+      // Try to load from Supabase first (shared data)
+      if (isSupabaseAvailable()) {
+        const supabaseData = await getSiteData();
+        if (supabaseData) {
+          if (supabaseData.contactInfo) setContactInfo(supabaseData.contactInfo);
+          if (supabaseData.socials) setSocials(supabaseData.socials);
+          if (supabaseData.portfolio) setPortfolio(supabaseData.portfolio);
+          if (supabaseData.footerLinks) setFooterLinks(supabaseData.footerLinks);
+          if (supabaseData.calendlyLink) setCalendlyLink(supabaseData.calendlyLink);
+          return; // If Supabase has data, use it and skip localStorage
+        }
+      }
 
-    if (storedContact) setContactInfo(JSON.parse(storedContact));
-    if (storedSocials) setSocials(JSON.parse(storedSocials));
-    if (storedPortfolio) setPortfolio(JSON.parse(storedPortfolio));
-    if (storedFooterLinks) setFooterLinks(JSON.parse(storedFooterLinks));
-    if (storedCalendly) setCalendlyLink(storedCalendly);
+      // Fallback to localStorage (for backward compatibility and if Supabase isn't set up)
+      try {
+        const storedContact = localStorage.getItem("contactInfo");
+        const storedSocials = localStorage.getItem("socials");
+        const storedPortfolio = localStorage.getItem("portfolio");
+        const storedFooterLinks = localStorage.getItem("footerLinks");
+        const storedCalendly = localStorage.getItem("calendlyLink");
+
+        if (storedContact) setContactInfo(JSON.parse(storedContact));
+        if (storedSocials) setSocials(JSON.parse(storedSocials));
+        if (storedPortfolio) setPortfolio(JSON.parse(storedPortfolio));
+        if (storedFooterLinks) setFooterLinks(JSON.parse(storedFooterLinks));
+        if (storedCalendly) setCalendlyLink(storedCalendly);
+      } catch (error) {
+        console.error("Error loading from localStorage:", error);
+      }
+    };
+
+    loadData();
   }, []);
 
-  const updateContactInfo = (info: ContactInfo) => {
+  const updateContactInfo = async (info: ContactInfo) => {
     setContactInfo(info);
     localStorage.setItem("contactInfo", JSON.stringify(info));
+    
+    // Save to Supabase for shared access
+    if (isSupabaseAvailable()) {
+      const currentData = await getSiteData() || {};
+      await saveSiteData({ ...currentData, contactInfo: info });
+    }
   };
 
-  const updateSocials = (newSocials: SocialLink[]) => {
+  const updateSocials = async (newSocials: SocialLink[]) => {
     setSocials(newSocials);
     localStorage.setItem("socials", JSON.stringify(newSocials));
+    
+    // Save to Supabase for shared access
+    if (isSupabaseAvailable()) {
+      const currentData = await getSiteData() || {};
+      await saveSiteData({ ...currentData, socials: newSocials });
+    }
   };
 
-  const addPortfolioItem = (item: PortfolioItem) => {
+  const addPortfolioItem = async (item: PortfolioItem) => {
     const newPortfolio = [...portfolio, item];
     setPortfolio(newPortfolio);
     localStorage.setItem("portfolio", JSON.stringify(newPortfolio));
+    
+    // Save to Supabase for shared access
+    if (isSupabaseAvailable()) {
+      const currentData = await getSiteData() || {};
+      await saveSiteData({ ...currentData, portfolio: newPortfolio });
+    }
   };
 
-  const removePortfolioItem = (id: string) => {
+  const removePortfolioItem = async (id: string) => {
     const newPortfolio = portfolio.filter((item) => item.id !== id);
     setPortfolio(newPortfolio);
     localStorage.setItem("portfolio", JSON.stringify(newPortfolio));
+    
+    // Save to Supabase for shared access
+    if (isSupabaseAvailable()) {
+      const currentData = await getSiteData() || {};
+      await saveSiteData({ ...currentData, portfolio: newPortfolio });
+    }
   };
 
-  const updateFooterLinks = (links: FooterLinks) => {
+  const updateFooterLinks = async (links: FooterLinks) => {
     setFooterLinks(links);
     localStorage.setItem("footerLinks", JSON.stringify(links));
+    
+    // Save to Supabase for shared access
+    if (isSupabaseAvailable()) {
+      const currentData = await getSiteData() || {};
+      await saveSiteData({ ...currentData, footerLinks: links });
+    }
   };
 
-  const updateCalendlyLink = (link: string) => {
+  const updateCalendlyLink = async (link: string) => {
     setCalendlyLink(link);
     localStorage.setItem("calendlyLink", link);
+    
+    // Save to Supabase for shared access
+    if (isSupabaseAvailable()) {
+      const currentData = await getSiteData() || {};
+      await saveSiteData({ ...currentData, calendlyLink: link });
+    }
   };
 
   return (

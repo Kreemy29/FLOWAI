@@ -58,39 +58,39 @@ const Admin = () => {
     });
   };
 
-  const handleContactSave = () => {
-    updateContactInfo(contactForm);
+  const handleContactSave = async () => {
+    await updateContactInfo(contactForm);
     toast({
       title: "Contact info updated",
-      description: "Changes have been saved successfully",
+      description: "Changes have been saved successfully and are now visible to all users",
     });
   };
 
-  const handleSocialsSave = () => {
-    updateSocials(socialsForm);
+  const handleSocialsSave = async () => {
+    await updateSocials(socialsForm);
     toast({
       title: "Social links updated",
-      description: "Changes have been saved successfully",
+      description: "Changes have been saved successfully and are now visible to all users",
     });
   };
 
-  const handleFooterSave = () => {
-    updateFooterLinks(footerForm);
+  const handleFooterSave = async () => {
+    await updateFooterLinks(footerForm);
     toast({
       title: "Footer links updated",
-      description: "Changes have been saved successfully",
+      description: "Changes have been saved successfully and are now visible to all users",
     });
   };
 
-  const handleCalendlySave = () => {
-    updateCalendlyLink(calendlyForm);
+  const handleCalendlySave = async () => {
+    await updateCalendlyLink(calendlyForm);
     toast({
       title: "Calendly link updated",
-      description: "Changes have been saved successfully",
+      description: "Changes have been saved successfully and are now visible to all users",
     });
   };
 
-  const handleAddPortfolioItem = () => {
+  const handleAddPortfolioItem = async () => {
     if (!newPortfolioItem.file && !newPortfolioItem.alt) {
       toast({
         title: "Error",
@@ -101,28 +101,28 @@ const Admin = () => {
     }
 
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       const item = {
         id: Date.now().toString(),
         type: newPortfolioItem.type,
         src: reader.result as string,
         alt: newPortfolioItem.alt,
       };
-      addPortfolioItem(item);
+      await addPortfolioItem(item);
       toast({
         title: "Portfolio item added",
-        description: "New item has been added to the portfolio",
+        description: "New item has been added and is now visible to all users",
       });
       setNewPortfolioItem({ type: "image", alt: "", file: null });
     };
     reader.readAsDataURL(newPortfolioItem.file!);
   };
 
-  const handleRemovePortfolioItem = (id: string) => {
-    removePortfolioItem(id);
+  const handleRemovePortfolioItem = async (id: string) => {
+    await removePortfolioItem(id);
     toast({
       title: "Portfolio item removed",
-      description: "Item has been removed from the portfolio",
+      description: "Item has been removed and changes are visible to all users",
     });
   };
 

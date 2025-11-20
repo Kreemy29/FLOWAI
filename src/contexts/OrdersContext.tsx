@@ -26,9 +26,16 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // Load orders from localStorage
-    const storedOrders = localStorage.getItem("orders");
-    if (storedOrders) {
-      setOrders(JSON.parse(storedOrders));
+    try {
+      const storedOrders = localStorage.getItem("orders");
+      if (storedOrders) {
+        const parsed = JSON.parse(storedOrders);
+        if (Array.isArray(parsed)) {
+          setOrders(parsed);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading orders from localStorage:", error);
     }
   }, []);
 
@@ -42,7 +49,11 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
 
     setOrders((prevOrders) => {
       const updatedOrders = [newOrder, ...prevOrders];
-      localStorage.setItem("orders", JSON.stringify(updatedOrders));
+      try {
+        localStorage.setItem("orders", JSON.stringify(updatedOrders));
+      } catch (error) {
+        console.error("Error saving order to localStorage:", error);
+      }
       return updatedOrders;
     });
   };
@@ -52,7 +63,11 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       const updatedOrders = prevOrders.map((order) =>
         order.id === id ? { ...order, status } : order
       );
-      localStorage.setItem("orders", JSON.stringify(updatedOrders));
+      try {
+        localStorage.setItem("orders", JSON.stringify(updatedOrders));
+      } catch (error) {
+        console.error("Error updating order in localStorage:", error);
+      }
       return updatedOrders;
     });
   };
@@ -60,7 +75,11 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
   const deleteOrder = (id: string) => {
     setOrders((prevOrders) => {
       const updatedOrders = prevOrders.filter((order) => order.id !== id);
-      localStorage.setItem("orders", JSON.stringify(updatedOrders));
+      try {
+        localStorage.setItem("orders", JSON.stringify(updatedOrders));
+      } catch (error) {
+        console.error("Error deleting order from localStorage:", error);
+      }
       return updatedOrders;
     });
   };
