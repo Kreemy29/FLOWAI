@@ -192,9 +192,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           footerLinks: supabaseData.footerLinks || footerLinks,
           calendlyLink: supabaseData.calendlyLink || calendlyLink,
         };
+        console.log('📤 Calling saveSiteData with:', Object.keys(allData));
         const success = await saveSiteData(allData);
+        console.log('📥 saveSiteData returned:', success);
         if (!success) {
           console.error("❌ Failed to save contact info to Supabase");
+          alert("❌ Failed to save contact info to Supabase. Check console for details.");
           return false;
         } else {
           console.log("✅ Contact info saved to Supabase successfully!");
@@ -243,9 +246,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         };
         console.log('💾 Merged data to save:', allData);
         
+        console.log('📤 Calling saveSiteData with:', Object.keys(allData));
         const success = await saveSiteData(allData);
+        console.log('📥 saveSiteData returned:', success);
         if (!success) {
           console.error("❌ Failed to save socials to Supabase");
+          alert("❌ Failed to save socials to Supabase. Check console for details.");
           return false;
         } else {
           console.log("✅ Socials saved to Supabase successfully!");
