@@ -180,10 +180,30 @@ export const saveSiteData = async (data: any) => {
       .single();
     
     if (verifyError) {
-      console.warn('⚠️ Could not verify save:', verifyError);
+      console.error('❌ VERIFY ERROR:', verifyError);
+      console.error('   Message:', verifyError.message);
+      console.error('   Code:', verifyError.code);
+      return false;
     } else {
       console.log('✅ VERIFIED: Data is in Supabase!');
-      console.log('📦 Verified data:', JSON.stringify(verifyData?.data, null, 2));
+      console.log('📦 Full verified record:', verifyData);
+      console.log('📦 Verified data field:', JSON.stringify(verifyData?.data, null, 2));
+      
+      // Double-check: Compare what we saved vs what we got back
+      const savedContactInfo = data?.contactInfo;
+      const verifiedContactInfo = verifyData?.data?.contactInfo;
+      
+      if (savedContactInfo && verifiedContactInfo) {
+        console.log('🔍 Comparing saved vs verified contactInfo:');
+        console.log('   Saved:', savedContactInfo);
+        console.log('   Verified:', verifiedContactInfo);
+        
+        if (JSON.stringify(savedContactInfo) === JSON.stringify(verifiedContactInfo)) {
+          console.log('✅ MATCH! Data is correctly saved and verified!');
+        } else {
+          console.error('❌ MISMATCH! Data saved but verification shows different data!');
+        }
+      }
     }
     
     return true;

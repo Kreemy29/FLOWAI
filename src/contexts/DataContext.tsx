@@ -86,42 +86,58 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       if (isSupabaseAvailable()) {
         console.log('📡 Supabase is available, attempting to load data...');
         const supabaseData = await getSiteData();
-        console.log('📦 Data from Supabase:', supabaseData);
+        console.log('📦 Raw data from Supabase:', supabaseData);
+        console.log('📦 Data keys:', supabaseData ? Object.keys(supabaseData) : 'null');
+        console.log('📦 Data type:', typeof supabaseData);
+        console.log('📦 Is object:', supabaseData && typeof supabaseData === 'object');
+        console.log('📦 Object keys length:', supabaseData && typeof supabaseData === 'object' ? Object.keys(supabaseData).length : 0);
         
-        if (supabaseData && Object.keys(supabaseData).length > 0) {
+        if (supabaseData && typeof supabaseData === 'object' && Object.keys(supabaseData).length > 0) {
+          console.log('✅ Supabase data found, loading into state...');
+          console.log('📦 Supabase contactInfo:', supabaseData.contactInfo);
+          console.log('📦 Supabase socials:', supabaseData.socials);
+          console.log('📦 Supabase portfolio:', supabaseData.portfolio);
+          
           // Merge Supabase data with defaults (Supabase data takes priority)
           if (supabaseData.contactInfo) {
-            console.log('✅ Loading contactInfo from Supabase');
+            console.log('✅ Loading contactInfo from Supabase:', supabaseData.contactInfo);
             setContactInfo(supabaseData.contactInfo);
+            localStorage.setItem("contactInfo", JSON.stringify(supabaseData.contactInfo));
           }
           if (supabaseData.socials && Array.isArray(supabaseData.socials)) {
-            console.log('✅ Loading socials from Supabase');
+            console.log('✅ Loading socials from Supabase:', supabaseData.socials);
             setSocials(supabaseData.socials);
+            localStorage.setItem("socials", JSON.stringify(supabaseData.socials));
           }
           if (supabaseData.portfolio && Array.isArray(supabaseData.portfolio)) {
-            console.log('✅ Loading portfolio from Supabase');
+            console.log('✅ Loading portfolio from Supabase:', supabaseData.portfolio);
             setPortfolio(supabaseData.portfolio);
+            localStorage.setItem("portfolio", JSON.stringify(supabaseData.portfolio));
           }
           if (supabaseData.footerLinks) {
-            console.log('✅ Loading footerLinks from Supabase');
+            console.log('✅ Loading footerLinks from Supabase:', supabaseData.footerLinks);
             setFooterLinks(supabaseData.footerLinks);
+            localStorage.setItem("footerLinks", JSON.stringify(supabaseData.footerLinks));
           }
           if (supabaseData.calendlyLink) {
-            console.log('✅ Loading calendlyLink from Supabase');
+            console.log('✅ Loading calendlyLink from Supabase:', supabaseData.calendlyLink);
             setCalendlyLink(supabaseData.calendlyLink);
+            localStorage.setItem("calendlyLink", supabaseData.calendlyLink);
           }
           
-          // Also save to localStorage as backup
-          if (supabaseData.contactInfo) localStorage.setItem("contactInfo", JSON.stringify(supabaseData.contactInfo));
-          if (supabaseData.socials) localStorage.setItem("socials", JSON.stringify(supabaseData.socials));
-          if (supabaseData.portfolio) localStorage.setItem("portfolio", JSON.stringify(supabaseData.portfolio));
-          if (supabaseData.footerLinks) localStorage.setItem("footerLinks", JSON.stringify(supabaseData.footerLinks));
-          if (supabaseData.calendlyLink) localStorage.setItem("calendlyLink", supabaseData.calendlyLink);
-          
-          console.log('✅ Data loaded from Supabase successfully');
+          console.log('✅✅✅ ALL DATA LOADED FROM SUPABASE SUCCESSFULLY!');
+          console.log('📊 Final state:');
+          console.log('   Contact:', supabaseData.contactInfo);
+          console.log('   Socials count:', supabaseData.socials?.length || 0);
+          console.log('   Portfolio count:', supabaseData.portfolio?.length || 0);
           return; // If Supabase has data, use it and skip localStorage fallback
         } else {
-          console.log('⚠️ Supabase returned empty data, falling back to localStorage');
+          console.log('⚠️ Supabase returned empty or invalid data');
+          console.log('   Data:', supabaseData);
+          console.log('   Type:', typeof supabaseData);
+          console.log('   Is object:', supabaseData && typeof supabaseData === 'object');
+          console.log('   Keys:', supabaseData && typeof supabaseData === 'object' ? Object.keys(supabaseData) : 'N/A');
+          console.log('   Falling back to localStorage');
         }
       } else {
         console.log('⚠️ Supabase not available, using localStorage');
