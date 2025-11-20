@@ -80,17 +80,51 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const loadData = async () => {
+      console.log('🔄 Loading data...');
+      
       // Try to load from Supabase first (shared data)
       if (isSupabaseAvailable()) {
+        console.log('📡 Supabase is available, attempting to load data...');
         const supabaseData = await getSiteData();
-        if (supabaseData) {
-          if (supabaseData.contactInfo) setContactInfo(supabaseData.contactInfo);
-          if (supabaseData.socials) setSocials(supabaseData.socials);
-          if (supabaseData.portfolio) setPortfolio(supabaseData.portfolio);
-          if (supabaseData.footerLinks) setFooterLinks(supabaseData.footerLinks);
-          if (supabaseData.calendlyLink) setCalendlyLink(supabaseData.calendlyLink);
-          return; // If Supabase has data, use it and skip localStorage
+        console.log('📦 Data from Supabase:', supabaseData);
+        
+        if (supabaseData && Object.keys(supabaseData).length > 0) {
+          // Merge Supabase data with defaults (Supabase data takes priority)
+          if (supabaseData.contactInfo) {
+            console.log('✅ Loading contactInfo from Supabase');
+            setContactInfo(supabaseData.contactInfo);
+          }
+          if (supabaseData.socials && Array.isArray(supabaseData.socials)) {
+            console.log('✅ Loading socials from Supabase');
+            setSocials(supabaseData.socials);
+          }
+          if (supabaseData.portfolio && Array.isArray(supabaseData.portfolio)) {
+            console.log('✅ Loading portfolio from Supabase');
+            setPortfolio(supabaseData.portfolio);
+          }
+          if (supabaseData.footerLinks) {
+            console.log('✅ Loading footerLinks from Supabase');
+            setFooterLinks(supabaseData.footerLinks);
+          }
+          if (supabaseData.calendlyLink) {
+            console.log('✅ Loading calendlyLink from Supabase');
+            setCalendlyLink(supabaseData.calendlyLink);
+          }
+          
+          // Also save to localStorage as backup
+          if (supabaseData.contactInfo) localStorage.setItem("contactInfo", JSON.stringify(supabaseData.contactInfo));
+          if (supabaseData.socials) localStorage.setItem("socials", JSON.stringify(supabaseData.socials));
+          if (supabaseData.portfolio) localStorage.setItem("portfolio", JSON.stringify(supabaseData.portfolio));
+          if (supabaseData.footerLinks) localStorage.setItem("footerLinks", JSON.stringify(supabaseData.footerLinks));
+          if (supabaseData.calendlyLink) localStorage.setItem("calendlyLink", supabaseData.calendlyLink);
+          
+          console.log('✅ Data loaded from Supabase successfully');
+          return; // If Supabase has data, use it and skip localStorage fallback
+        } else {
+          console.log('⚠️ Supabase returned empty data, falling back to localStorage');
         }
+      } else {
+        console.log('⚠️ Supabase not available, using localStorage');
       }
 
       // Fallback to localStorage (for backward compatibility and if Supabase isn't set up)
@@ -101,13 +135,29 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const storedFooterLinks = localStorage.getItem("footerLinks");
         const storedCalendly = localStorage.getItem("calendlyLink");
 
-        if (storedContact) setContactInfo(JSON.parse(storedContact));
-        if (storedSocials) setSocials(JSON.parse(storedSocials));
-        if (storedPortfolio) setPortfolio(JSON.parse(storedPortfolio));
-        if (storedFooterLinks) setFooterLinks(JSON.parse(storedFooterLinks));
-        if (storedCalendly) setCalendlyLink(storedCalendly);
+        if (storedContact) {
+          console.log('📦 Loading contactInfo from localStorage');
+          setContactInfo(JSON.parse(storedContact));
+        }
+        if (storedSocials) {
+          console.log('📦 Loading socials from localStorage');
+          setSocials(JSON.parse(storedSocials));
+        }
+        if (storedPortfolio) {
+          console.log('📦 Loading portfolio from localStorage');
+          setPortfolio(JSON.parse(storedPortfolio));
+        }
+        if (storedFooterLinks) {
+          console.log('📦 Loading footerLinks from localStorage');
+          setFooterLinks(JSON.parse(storedFooterLinks));
+        }
+        if (storedCalendly) {
+          console.log('📦 Loading calendlyLink from localStorage');
+          setCalendlyLink(storedCalendly);
+        }
+        console.log('✅ Data loaded from localStorage');
       } catch (error) {
-        console.error("Error loading from localStorage:", error);
+        console.error("❌ Error loading from localStorage:", error);
       }
     };
 
@@ -120,8 +170,28 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     
     // Save to Supabase for shared access
     if (isSupabaseAvailable()) {
-      const currentData = await getSiteData() || {};
-      await saveSiteData({ ...currentData, contactInfo: info });
+      try {
+        // Get current Supabase data first (this is the source of truth)
+        const supabaseData = await getSiteData() || {};
+        // Merge with current local state and new info
+        const allData = {
+          ...supabaseData, // Start with Supabase data (most up-to-date)
+          contactInfo: info, // Override with new contact info
+          // Keep other fields from Supabase if they exist, otherwise use local state
+          socials: supabaseData.socials || socials,
+          portfolio: supabaseData.portfolio || portfolio,
+          footerLinks: supabaseData.footerLinks || footerLinks,
+          calendlyLink: supabaseData.calendlyLink || calendlyLink,
+        };
+        const success = await saveSiteData(allData);
+        if (!success) {
+          console.error("❌ Failed to save contact info to Supabase");
+        } else {
+          console.log("✅ Contact info saved to Supabase:", allData);
+        }
+      } catch (error) {
+        console.error("❌ Error saving contact info to Supabase:", error);
+      }
     }
   };
 
@@ -131,8 +201,28 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     
     // Save to Supabase for shared access
     if (isSupabaseAvailable()) {
-      const currentData = await getSiteData() || {};
-      await saveSiteData({ ...currentData, socials: newSocials });
+      try {
+        // Get current Supabase data first (this is the source of truth)
+        const supabaseData = await getSiteData() || {};
+        // Merge with current local state and new socials
+        const allData = {
+          ...supabaseData, // Start with Supabase data (most up-to-date)
+          socials: newSocials, // Override with new socials
+          // Keep other fields from Supabase if they exist, otherwise use local state
+          contactInfo: supabaseData.contactInfo || contactInfo,
+          portfolio: supabaseData.portfolio || portfolio,
+          footerLinks: supabaseData.footerLinks || footerLinks,
+          calendlyLink: supabaseData.calendlyLink || calendlyLink,
+        };
+        const success = await saveSiteData(allData);
+        if (!success) {
+          console.error("❌ Failed to save socials to Supabase");
+        } else {
+          console.log("✅ Socials saved to Supabase:", allData);
+        }
+      } catch (error) {
+        console.error("❌ Error saving socials to Supabase:", error);
+      }
     }
   };
 
@@ -143,8 +233,22 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     
     // Save to Supabase for shared access
     if (isSupabaseAvailable()) {
-      const currentData = await getSiteData() || {};
-      await saveSiteData({ ...currentData, portfolio: newPortfolio });
+      // Get current Supabase data and merge with current state
+      const supabaseData = await getSiteData() || {};
+      const allData = {
+        ...supabaseData,
+        contactInfo: contactInfo,
+        socials: socials,
+        portfolio: newPortfolio,
+        footerLinks: footerLinks,
+        calendlyLink: calendlyLink,
+      };
+      const success = await saveSiteData(allData);
+      if (!success) {
+        console.error("Failed to save portfolio to Supabase");
+      } else {
+        console.log("✅ Portfolio saved to Supabase");
+      }
     }
   };
 
@@ -155,8 +259,22 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     
     // Save to Supabase for shared access
     if (isSupabaseAvailable()) {
-      const currentData = await getSiteData() || {};
-      await saveSiteData({ ...currentData, portfolio: newPortfolio });
+      // Get current Supabase data and merge with current state
+      const supabaseData = await getSiteData() || {};
+      const allData = {
+        ...supabaseData,
+        contactInfo: contactInfo,
+        socials: socials,
+        portfolio: newPortfolio,
+        footerLinks: footerLinks,
+        calendlyLink: calendlyLink,
+      };
+      const success = await saveSiteData(allData);
+      if (!success) {
+        console.error("Failed to save portfolio to Supabase");
+      } else {
+        console.log("✅ Portfolio saved to Supabase");
+      }
     }
   };
 
@@ -166,8 +284,28 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     
     // Save to Supabase for shared access
     if (isSupabaseAvailable()) {
-      const currentData = await getSiteData() || {};
-      await saveSiteData({ ...currentData, footerLinks: links });
+      try {
+        // Get current Supabase data first (this is the source of truth)
+        const supabaseData = await getSiteData() || {};
+        // Merge with current local state and new footer links
+        const allData = {
+          ...supabaseData, // Start with Supabase data (most up-to-date)
+          footerLinks: links, // Override with new footer links
+          // Keep other fields from Supabase if they exist, otherwise use local state
+          contactInfo: supabaseData.contactInfo || contactInfo,
+          socials: supabaseData.socials || socials,
+          portfolio: supabaseData.portfolio || portfolio,
+          calendlyLink: supabaseData.calendlyLink || calendlyLink,
+        };
+        const success = await saveSiteData(allData);
+        if (!success) {
+          console.error("❌ Failed to save footer links to Supabase");
+        } else {
+          console.log("✅ Footer links saved to Supabase:", allData);
+        }
+      } catch (error) {
+        console.error("❌ Error saving footer links to Supabase:", error);
+      }
     }
   };
 
@@ -177,8 +315,28 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     
     // Save to Supabase for shared access
     if (isSupabaseAvailable()) {
-      const currentData = await getSiteData() || {};
-      await saveSiteData({ ...currentData, calendlyLink: link });
+      try {
+        // Get current Supabase data first (this is the source of truth)
+        const supabaseData = await getSiteData() || {};
+        // Merge with current local state and new calendly link
+        const allData = {
+          ...supabaseData, // Start with Supabase data (most up-to-date)
+          calendlyLink: link, // Override with new calendly link
+          // Keep other fields from Supabase if they exist, otherwise use local state
+          contactInfo: supabaseData.contactInfo || contactInfo,
+          socials: supabaseData.socials || socials,
+          portfolio: supabaseData.portfolio || portfolio,
+          footerLinks: supabaseData.footerLinks || footerLinks,
+        };
+        const success = await saveSiteData(allData);
+        if (!success) {
+          console.error("❌ Failed to save calendly link to Supabase");
+        } else {
+          console.log("✅ Calendly link saved to Supabase:", allData);
+        }
+      } catch (error) {
+        console.error("❌ Error saving calendly link to Supabase:", error);
+      }
     }
   };
 

@@ -59,35 +59,132 @@ const Admin = () => {
   };
 
   const handleContactSave = async () => {
-    await updateContactInfo(contactForm);
-    toast({
-      title: "Contact info updated",
-      description: "Changes have been saved successfully and are now visible to all users",
-    });
+    try {
+      await updateContactInfo(contactForm);
+      // Wait a bit for Supabase save to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Check if Supabase is available
+      const url = import.meta.env.VITE_SUPABASE_URL;
+      const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const supabaseAvailable = !!(url && key && url !== '' && key !== '');
+      
+      if (supabaseAvailable) {
+        toast({
+          title: "✅ Contact info saved",
+          description: "Changes have been saved to Supabase and are now visible to all users",
+        });
+      } else {
+        toast({
+          title: "⚠️ Contact info saved (local only)",
+          description: "Changes saved locally. Supabase not configured - check environment variables.",
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving contact info:", error);
+      toast({
+        title: "❌ Save failed",
+        description: "Failed to save contact info. Check console for details.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSocialsSave = async () => {
-    await updateSocials(socialsForm);
-    toast({
-      title: "Social links updated",
-      description: "Changes have been saved successfully and are now visible to all users",
-    });
+    try {
+      await updateSocials(socialsForm);
+      // Wait a bit for Supabase save to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const url = import.meta.env.VITE_SUPABASE_URL;
+      const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const supabaseAvailable = !!(url && key && url !== '' && key !== '');
+      
+      if (supabaseAvailable) {
+        toast({
+          title: "✅ Social links saved",
+          description: "Changes have been saved to Supabase and are now visible to all users",
+        });
+      } else {
+        toast({
+          title: "⚠️ Social links saved (local only)",
+          description: "Changes saved locally. Supabase not configured.",
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving socials:", error);
+      toast({
+        title: "❌ Save failed",
+        description: "Failed to save social links. Check console for details.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleFooterSave = async () => {
-    await updateFooterLinks(footerForm);
-    toast({
-      title: "Footer links updated",
-      description: "Changes have been saved successfully and are now visible to all users",
-    });
+    try {
+      await updateFooterLinks(footerForm);
+      // Wait a bit for Supabase save to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const url = import.meta.env.VITE_SUPABASE_URL;
+      const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const supabaseAvailable = !!(url && key && url !== '' && key !== '');
+      
+      if (supabaseAvailable) {
+        toast({
+          title: "✅ Footer links saved",
+          description: "Changes have been saved to Supabase and are now visible to all users",
+        });
+      } else {
+        toast({
+          title: "⚠️ Footer links saved (local only)",
+          description: "Changes saved locally. Supabase not configured.",
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving footer links:", error);
+      toast({
+        title: "❌ Save failed",
+        description: "Failed to save footer links. Check console for details.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCalendlySave = async () => {
-    await updateCalendlyLink(calendlyForm);
-    toast({
-      title: "Calendly link updated",
-      description: "Changes have been saved successfully and are now visible to all users",
-    });
+    try {
+      await updateCalendlyLink(calendlyForm);
+      // Wait a bit for Supabase save to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const url = import.meta.env.VITE_SUPABASE_URL;
+      const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const supabaseAvailable = !!(url && key && url !== '' && key !== '');
+      
+      if (supabaseAvailable) {
+        toast({
+          title: "✅ Calendly link saved",
+          description: "Changes have been saved to Supabase and are now visible to all users",
+        });
+      } else {
+        toast({
+          title: "⚠️ Calendly link saved (local only)",
+          description: "Changes saved locally. Supabase not configured.",
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving calendly link:", error);
+      toast({
+        title: "❌ Save failed",
+        description: "Failed to save Calendly link. Check console for details.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddPortfolioItem = async () => {

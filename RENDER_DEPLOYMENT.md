@@ -30,7 +30,25 @@
 5. Click "Create Static Site"
 
 ### Environment Variables
-No environment variables needed for this deployment.
+
+Add these environment variables in Render Dashboard → Your Service → Environment tab:
+
+1. **VITE_SUPABASE_URL**
+   - Value: `https://gjqbxpmeplwtjflwhfzz.supabase.co`
+
+2. **VITE_SUPABASE_ANON_KEY**
+   - Value: `sb_publishable_D7k935ysGsE0ENRhJ7YCmA_oDQYUfom`
+
+**Steps:**
+1. Go to your service in Render Dashboard
+2. Click on **"Environment"** tab
+3. Click **"Add Environment Variable"** for each:
+   - Add `VITE_SUPABASE_URL` with your Supabase project URL
+   - Add `VITE_SUPABASE_ANON_KEY` with your Supabase anon key
+4. Click **"Save Changes"**
+5. **Redeploy** your site (Render may auto-redeploy, or click "Manual Deploy")
+
+**Note:** These are required for Supabase database integration to work in production.
 
 ### Build Settings Summary
 - **Build Command**: `npm install && npm run build`
