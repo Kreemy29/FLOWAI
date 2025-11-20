@@ -3,6 +3,7 @@ import { useData } from "@/contexts/DataContext";
 import { useOrders, Order } from "@/contexts/OrdersContext";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { getAllUsers } from "@/services/supabase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,7 @@ const Admin = () => {
     file: null as File | null,
   });
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [registeredUsers, setRegisteredUsers] = useState<any[]>([]);
 
   useEffect(() => {
     // Wait a moment for auth to initialize from localStorage
@@ -74,6 +76,23 @@ const Admin = () => {
     
     checkAuth();
   }, [isAdmin, navigate]);
+
+  // Load registered users
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const users = await getAllUsers();
+        setRegisteredUsers(users);
+        console.log('📊 Loaded users from Supabase:', users);
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    };
+    
+    if (isAdmin) {
+      loadUsers();
+    }
+  }, [isAdmin]);
 
   const handleLogout = () => {
     logout();
@@ -359,8 +378,9 @@ const Admin = () => {
           </div>
 
           <Tabs defaultValue="orders" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="orders">Orders ({orders.length})</TabsTrigger>
+              <TabsTrigger value="users">Users ({registeredUsers.length})</TabsTrigger>
               <TabsTrigger value="contact">Contact Info</TabsTrigger>
               <TabsTrigger value="socials">Social Links</TabsTrigger>
               <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
@@ -483,6 +503,53 @@ const Admin = () => {
                                   )}
                                 </div>
                               )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="users">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Registered Users</CardTitle>
+                  <CardDescription>
+                    View all user accounts registered on the website
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {registeredUsers.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Mail className="mx-auto mb-4" size={48} />
+                      <p>No users registered yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {registeredUsers.map((user) => (
+                        <Card key={user.id} className="border-border">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h3 className="font-semibold">{user.email}</h3>
+                                <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                                  <span className="capitalize">{user.role}</span>
+                                  <span>•</span>
+                                  <span>
+                                    Joined: {format(new Date(user.created_at), "PPp")}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {user.role === 'admin' && (
+                                  <span className="px-2 py-1 text-xs bg-primary/10 text-primary rounded">
+                                    Admin
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </CardContent>
                         </Card>

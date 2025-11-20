@@ -94,6 +94,13 @@ export const saveSiteData = async (data: any) => {
     console.log('💾 Attempting to save data to Supabase...');
     console.log('📦 Data being saved:', JSON.stringify(data, null, 2));
     console.log('🔗 Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+    console.log('🔑 Supabase Key present:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+    console.log('📊 Supabase client:', supabase ? 'INITIALIZED' : 'NULL');
+    
+    if (!supabase) {
+      console.error('❌ CRITICAL: Supabase client is null!');
+      return false;
+    }
     
     const { data: result, error } = await supabase
       .from('site_data')
@@ -137,6 +144,97 @@ export const saveSiteData = async (data: any) => {
     console.error("❌ Exception saving site data:", error);
     console.error("Exception stack:", error.stack);
     return false;
+  }
+};
+
+// User management functions
+export const saveUser = async (email: string, passwordHash: string, role: string = 'user') => {
+  if (!supabase) {
+    console.error("❌ Cannot save user: Supabase client not initialized");
+    return false;
+  }
+
+  try {
+    console.log('💾 Attempting to save user to Supabase...', { email, role });
+    const { data, error } = await supabase
+      .from('users')
+      .insert({
+        email,
+        password_hash: passwordHash,
+        role,
+      });
+
+    if (error) {
+      // If user already exists, that's okay
+      if (error.code === '23505') {
+        console.log('ℹ️ User already exists in Supabase');
+        return true;
+      }
+      console.error("❌ Error saving user:", error);
+      console.error("Error details:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
+      return false;
+    }
+
+    console.log('✅ User saved successfully to Supabase!');
+    return true;
+  } catch (error: any) {
+    console.error("❌ Exception saving user:", error);
+    return false;
+  }
+};
+
+export const getUserByEmail = async (email: string) => {
+  if (!supabase) {
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null; // User not found
+      }
+      console.error("Error getting user:", error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Exception getting user:", error);
+    return null;
+  }
+};
+
+export const getAllUsers = async () => {
+  if (!supabase) {
+    return [];
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, email, role, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error getting users:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Exception getting users:", error);
+    return [];
   }
 };
 

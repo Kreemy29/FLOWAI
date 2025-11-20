@@ -166,11 +166,18 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
   const updateContactInfo = async (info: ContactInfo): Promise<boolean> => {
     console.log('🔄 updateContactInfo called with:', info);
+    console.log('🔍 Checking Supabase availability...');
+    console.log('   URL:', import.meta.env.VITE_SUPABASE_URL || 'NOT SET');
+    console.log('   Key:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
+    
     setContactInfo(info);
     localStorage.setItem("contactInfo", JSON.stringify(info));
     
     // Save to Supabase for shared access
-    if (isSupabaseAvailable()) {
+    const supabaseAvailable = isSupabaseAvailable();
+    console.log('   Supabase available:', supabaseAvailable);
+    
+    if (supabaseAvailable) {
       try {
         console.log('✅ Supabase is available, proceeding to save contact info...');
         // Get current Supabase data first (this is the source of truth)
@@ -205,11 +212,18 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
   const updateSocials = async (newSocials: SocialLink[]): Promise<boolean> => {
     console.log('🔄 updateSocials called with:', newSocials);
+    console.log('🔍 Checking Supabase availability...');
+    console.log('   URL:', import.meta.env.VITE_SUPABASE_URL || 'NOT SET');
+    console.log('   Key:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
+    
     setSocials(newSocials);
     localStorage.setItem("socials", JSON.stringify(newSocials));
     
     // Save to Supabase for shared access
-    if (isSupabaseAvailable()) {
+    const supabaseAvailable = isSupabaseAvailable();
+    console.log('   Supabase available:', supabaseAvailable);
+    
+    if (supabaseAvailable) {
       console.log('✅ Supabase is available, proceeding to save socials...');
       try {
         // Get current Supabase data first (this is the source of truth)
